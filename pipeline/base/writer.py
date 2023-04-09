@@ -14,7 +14,11 @@ from matplotlib.figure import Figure
 import joblib
 from utils.path import fixPath
 from typing import Any, Optional
-import torch
+try:
+    import torch #type: ignore
+except ImportError:
+    torch = object
+    torch.is_tensor = lambda x: False
 
 
 class Writer(metaclass=TimeRegistration):

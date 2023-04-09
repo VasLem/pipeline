@@ -12,5 +12,4 @@ from pipeline.base.iterative_pipeline import IterativePipeline
 from pipeline.base.aggregator import Aggregator
 from pipeline.base.decimator import Decimator
 from pipeline.base.reporter import Reporter
-from pipeline.base.model import Model
 from pipeline.base.exceptions import *

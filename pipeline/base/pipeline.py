@@ -12,24 +12,23 @@ from pipeline.base.exceptions import (
     PipelineBreak,
     PipelineHalted,
     UntilStepReached,
-    InvalidCache,
 )
 from pipeline.base.cacher import Cacher, InstancesCacher
 from pipeline.base.hierarchical_model import HierarchyNode
-from pipeline.common import (
-    USE_CACHING,
-    KeywordArguments,
-    RunConfiguration,
-    SampleConfiguration,
-)
+from pipeline import PIPELINE_CONFIG
+from utils.config import Configuration as RunConfiguration
+from utils.config import Configuration as SampleConfiguration
+import ast
+
 from utils.logging import LOGGER
-from utils.path import isNetworkFolder, oldest_files_in_tree
+from utils.path import oldest_files_in_tree
 from utils.hash import HashFactory
 from traceback import print_exc
 import numpy as np
 from typing import TypeVar
 
 
+USE_CACHING = ast.literal_eval(PIPELINE_CONFIG['use_caching'])
 InputArgs = TypeVarTuple("InputArgs")
 OutputArgs = TypeVar("OutputArgs", bound=tuple)
 
@@ -337,10 +336,7 @@ class Pipeline(Block, HierarchyNode[Self, Node, Leaf, Step]):
         """
         self.reset()
         os.makedirs(self.resultsDir, exist_ok=True)
-        if isinstance(inp, (tuple, list)):
-            out = inp.__class__([x for x in inp if not isinstance(x, KeywordArguments)])
-        else:
-            out = inp
+        out = inp
         if _accessPoint:
             LOGGER.debug(
                 f"Running with the following run configuration: {self.runConfig}"
@@ -417,11 +413,10 @@ class Pipeline(Block, HierarchyNode[Self, Node, Leaf, Step]):
 
                     gc.collect()
                     try:
-                        import torch
-
+                        import torch # type: ignore
                         if torch.cuda.is_available():
                             torch.cuda.empty_cache()
-                    except:
+                    except BaseException:
                         pass
             except UntilStepReached as err:
                 if self.isRoot:

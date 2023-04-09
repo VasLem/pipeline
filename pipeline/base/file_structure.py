@@ -7,8 +7,8 @@ from hashlib import sha512
 from utils.timing import TimeRegistration
 from utils.reload import ReloadCallerFnOnChange
 from utils.documentation import DocInherit
-from pipeline.common import RunConfiguration
-from pipeline.common import PIPELINE_CONFIG
+from utils.config import Configuration as RunConfiguration
+from pipeline import PIPELINE_CONFIG
 import shutil
 from utils.path import oldest_files_in_tree, fixPath
 

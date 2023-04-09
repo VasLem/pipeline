@@ -8,14 +8,17 @@ import pymongo
 import regex
 from bs4 import BeautifulSoup, Tag
 from tqdm import tqdm
-import torch
+try:
+    import torch
+except ImportError:
+    from types import new_class
+    torch = object
+    torch.Tensor = new_class("torch.Tensor")
 from pipeline.base.exceptions import PipelineHalted
 from pipeline.base.writer import Writer
 from utils.html_table import makeHtmlTable
-from utils.network import internetOn
 from utils.video import MP4Writer
 from utils.visualization import preprocess
-from config import PROJ_DIR
 from typing import Optional, Any
 
 if TYPE_CHECKING:
@@ -101,15 +104,8 @@ def getVideoTag(report: BeautifulSoup, path: str, relPath: str) -> Tag:
     return videoDiv
 
 
-from utils.path import IS_WINDOWS
-
-if IS_WINDOWS:
-    CONNECTION_URL = "mongodb://localhost:27017"
-    CERTIFICATE_PATH = None
-else:
-    CONNECTION_URL = "mongodb+srv://cluster0.a5h2hn4.mongodb.net/?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority"
-    CERTIFICATE_PATH = os.path.join(PROJ_DIR, "pipeline", "data", "db", "X509-cert.pem")
-
+CONNECTION_URL = "mongodb://localhost:27017"
+CERTIFICATE_PATH = None
 
 def convertDictToTable(report: BeautifulSoup, d: Dict[str, str]) -> Tag:
     table = report.new_tag("table")

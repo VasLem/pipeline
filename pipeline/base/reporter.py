@@ -9,7 +9,7 @@ import regex
 from bs4 import BeautifulSoup, Tag
 from tqdm import tqdm
 try:
-    import torch
+    import torch # type: ignore
 except ImportError:
     from types import new_class
     torch = object
@@ -568,10 +568,7 @@ class Reporter(Writer):
 
             body.append(convertDictToTable(report, self.parent.runConfig.toDict()))
 
-            from pipeline.config import ConfigHandler
-
             samplesBodies: List[Tag] = []
-            loader = ConfigHandler(mode=self.parent.runConfig.mode)
             data = list(
                 self.content.find(
                     {
@@ -1079,16 +1076,6 @@ class Reporter(Writer):
 
             with open(os.path.join(reportDir, "runConfig.json"), "w") as out:
                 json.dump(self.parent.runConfig.toDict(), out)
-            if samplesNames and samplesNames[0]:
-                with open(os.path.join(reportDir, "sampleConfig.json"), "w") as out:
-                    json.dump(
-                        {
-                            k: loader.samplesConfigs[k]  # type: ignore
-                            for k in samplesNames
-                            if k is not None and k in loader.samplesConfigs
-                        },
-                        out,
-                    )
 
         return report
 

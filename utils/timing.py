@@ -1,11 +1,13 @@
-HIGH_RUNTIME = 1
 from types import FunctionType
 from functools import wraps
 import time
 from utils.logging import LOGGER
+import logging
+from typing import Any, Tuple, Mapping
+from datetime import datetime
 
 
-def timer(method):
+def timer(method, logLevel, logAt):
     @wraps(method)
     def wrapped(*args, **kwargs):
         self = args[0]
@@ -16,9 +18,10 @@ def timer(method):
         t0 = time.time()
         ret = method(*args, **kwargs)
         t1 = time.time()
-        if t1 - t0 > HIGH_RUNTIME:
-            LOGGER.debug(
-                f"Function {method.__name__} of {name} took {t1-t0} seconds to finish"
+        if t1 - t0 > logAt:
+            LOGGER.log(
+                logLevel,
+                f"Function {method.__name__} of {name} took {t1-t0} seconds to finish",
             )
         return ret
 
@@ -26,19 +29,28 @@ def timer(method):
 
 
 class TimeRegistration(type):
-    def __new__(meta, classname, bases, classDict):
+    @classmethod
+    def __prepare__(
+        metacls, __name: str, __bases: Tuple[type, ...], **kwds: Any
+    ) -> Mapping[str, object]:
+        return super().__prepare__(__name, __bases, **kwds)
+
+    def __new__(meta, classname, bases, classDict, **kwds):
         newClassDict = {}
         for attributeName, attribute in classDict.items():
             if isinstance(attribute, FunctionType) and not attributeName.startswith(
                 "_"
             ):
-                attribute = timer(attribute)
+                attribute = timer(
+                    attribute,
+                    logLevel=kwds.get("logLevel", logging.DEBUG),
+                    logAt=kwds.get("logAt", None),
+                )
             newClassDict[attributeName] = attribute
-        newcls = super(TimeRegistration, meta).__new__(meta, classname, bases, classDict)
-        return newcls
+        return super().__new__(meta, classname, bases, classDict)
 
-
-from datetime import datetime
+    def __init__(cls, name, bases, namespace, **kwargs):
+        super().__init__(name, bases, namespace)
 
 
 def getCurrentTimeString() -> str:

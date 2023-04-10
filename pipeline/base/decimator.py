@@ -1,7 +1,7 @@
 from typing import Callable, Optional
 
 from pipeline.base.block import Block
-from pipeline.common import SampleConfiguration
+from utils.config import Configuration as SampleConfiguration
 from utils.hash import HashFactory
 import inspect
 

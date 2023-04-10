@@ -16,16 +16,13 @@ from typing_extensions import TypeVarTuple, Unpack
 import numpy as np
 import pandas as pd
 import inspect
-
+import ast
 from pipeline.base.exceptions import BlockError, REGISTERED_EXCEPTIONS
 from pipeline.base.reporter import Reporter
 from pipeline.base.writer import Writer
 from pipeline.base.hierarchical_model import HierarchyLeaf
-from pipeline.common import (
-    PIPELINE_CONFIG,
-    RunConfiguration,
-    USE_CACHING,
-)
+from pipeline import PIPELINE_CONFIG
+from utils.config import Configuration as RunConfiguration
 from utils.logging import LOGGER, emitProgress
 from bs4 import BeautifulSoup
 
@@ -89,7 +86,7 @@ class Block(
         self._writer = None
         self._onCopy = False
         self._cache = (
-            USE_CACHING
+            ast.literal_eval(PIPELINE_CONFIG["use_caching"])
             and cache  # Do not affect the children as well, unless explicitly stated
         )
         self._runConfig = None

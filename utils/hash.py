@@ -9,7 +9,7 @@ from types import new_class
 from collections import OrderedDict
 
 try:
-    import cloudpickle
+    import cloudpickle # type: ignore
 except ImportError:
     cloudpickle = None
     pass
@@ -26,7 +26,7 @@ except ImportError:
     pd.Series = new_class("Series")
 
 try:
-    import torch
+    import torch # type: ignore
 except ImportError:
     torch = object
     torch.is_tensor = lambda x: False

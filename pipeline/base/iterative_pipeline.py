@@ -13,7 +13,7 @@ from pipeline.base.decimator import Decimator
 from pipeline.base.exceptions import SkipIterationError, UntilStepReached
 from pipeline.base.pipeline import Pipeline
 from pipeline.base.block import Block
-from pipeline.common import RunConfiguration
+from utils.config import Configuration as RunConfiguration
 from utils.logging import LOGGER
 from utils.hash import HashFactory
 from pipeline.base.cacher import InstancesCacher

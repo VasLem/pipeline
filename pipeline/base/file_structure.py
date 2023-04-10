@@ -1,20 +1,27 @@
+import ast
 import os
-from typing import (
-    Optional,
-)
-from hashlib import sha512
-
-from utils.timing import TimeRegistration
-from utils.reload import ReloadCallerFnOnChange
-from utils.documentation import DocInherit
-from utils.config import Configuration as RunConfiguration
-from pipeline import PIPELINE_CONFIG
 import shutil
-from utils.path import oldest_files_in_tree, fixPath
+from hashlib import sha512
+from typing import Optional
+
+from pipeline import PIPELINE_CONFIG
+from utils.config import Configuration as RunConfiguration
+from utils.documentation import DocInherit
+from utils.path import fixPath, oldest_files_in_tree
+from utils.reload import ReloadCallerFnOnChange
+from utils.timing import TimeRegistration
 
 
-class CombinedMeta(TimeRegistration, ReloadCallerFnOnChange, DocInherit):
-    pass
+class MetaTimeRegistration(
+    metaclass=TimeRegistration,
+    logAt=ast.literal_eval(PIPELINE_CONFIG["show_runtime_gt"]),
+    logLevel=PIPELINE_CONFIG["show_runtime_log_level"],
+):
+    ...
+
+
+class CombinedMeta(MetaTimeRegistration, ReloadCallerFnOnChange, DocInherit):
+    ...
 
 
 class FileStructure(metaclass=CombinedMeta):

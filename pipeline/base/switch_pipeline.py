@@ -3,7 +3,7 @@ from typing import Iterable, List, Optional, Tuple, Union
 
 from utils.logging import LOGGER
 from pipeline.base.block import Block
-from pipeline.common import RunConfiguration
+from utils.config import Configuration as RunConfiguration
 from pipeline.base.iterative_pipeline import IterativePipeline
 from pipeline.base.pipeline import Pipeline
 import networkx as nx

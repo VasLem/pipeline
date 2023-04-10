@@ -140,16 +140,6 @@ dmypy.json
 .testPipeline
 
 
-#Autofocusing Dataset folder
-autofocusing/dataset
-
-#Tensorboard outputs
-runs
-
-#SGE jupyter cache files
-rik_kernel*.json
-
-
 #excel-files
 ~$*
 

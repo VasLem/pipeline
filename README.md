@@ -22,7 +22,7 @@ The pipeline factory generates pipelines.
 - Each step of a **Pipeline** receives as input the output from the previous step.
 - The function of each **Block** receives as input a reference to its parent and the input to the block.
 - Only positional input arguments are passed to each **Block** caller.
-- Each **Block** and **Pipeline** are cached upon request.
+- Each **Block** and **Pipeline** are cached upon request (default).
 - The root **Pipeline** or **Block** always need a `RunConfiguration`.
 - A MongoDB Database is used locally to report pipeline results. The results are saved in a folder.
 

@@ -1,30 +1,28 @@
 from __future__ import annotations
+
+import ast
 import gc
 import os
-from typing import List, Optional, Tuple, Union
-from typing_extensions import TypeVarTuple, Unpack
-
+from traceback import print_exc
+from typing import Any, List, Optional
 from typing import OrderedDict as OrderedDictType
+from typing import Tuple, Type, TypeVar, Union
+
+import numpy as np
 from aggregator import Aggregator
 from block import Block
 from decimator import Decimator
-from exceptions import (
-    PipelineBreak,
-    PipelineHalted,
-    UntilStepReached,
-)
+from exceptions import PipelineBreak, PipelineHalted, UntilStepReached
 from hierarchical_model import HierarchyNode
-from . import PIPELINE_CONFIG
-from utils.config import Configuration as RunConfiguration
-from utils.config import Configuration as SampleConfiguration
-import ast
-
+from typing_extensions import TypeVarTuple, Unpack
+from utils.config import Configuration
+from utils.hash import HashFactory
 from utils.logging import LOGGER
 from utils.path import oldest_files_in_tree
-from utils.hash import HashFactory
-from traceback import print_exc
-import numpy as np
-from typing import TypeVar
+
+from . import PIPELINE_CONFIG
+
+RunConfiguration = TypeVar("RunConfiguration", bound = Configuration)
 
 
 USE_CACHING = ast.literal_eval(PIPELINE_CONFIG['use_caching'])
@@ -54,7 +52,7 @@ class Pipeline(Block, HierarchyNode[Self, Node, Leaf, Step]):
         self: Self,
         name: str,
         steps: List[Step],
-        runConfig: RunConfiguration,
+        runConfig: RunConfiguration=None,
         version: str = "",
         description: str = "",
         parent: Optional[Node] = None,
@@ -77,7 +75,6 @@ class Pipeline(Block, HierarchyNode[Self, Node, Leaf, Step]):
             cache(bool, optional): Whether to cache runs. Defaults to true.
             hideInShortenedGraph (bool, optional): Whether not to show this pipeline in the shortened graph version. Defaults to False.
             **params: Additional parameters can be provided, that are going to propagate to all the steps, recursively.
-                For example the sampleName or sampleConfig can be provided.
         """
         if not all(hasattr(x, "_isblock") for x in steps):
             raise ValueError(f"Invalid steps provided: {steps}")
@@ -111,7 +108,6 @@ class Pipeline(Block, HierarchyNode[Self, Node, Leaf, Step]):
 
         self.params = params
         self.runConfig = runConfig  # required for typing
-
         self.updateParams(params)
 
     @property
@@ -126,39 +122,39 @@ class Pipeline(Block, HierarchyNode[Self, Node, Leaf, Step]):
 
     def stepsNum(
         self,
-        sampleConfig: Optional[
-            Union[List[SampleConfiguration], SampleConfiguration]
-        ] = None,
+        sampleInfo: Optional[Any] = None,
     ):
-        """The total number of steps, computed recursively"""
+        """
+        The total number of steps, computed recursively
+        Sample information is required by the `computeOutputRatioFunc` of the
+        `Decimator` and `Aggregator` steps of the pipeline
+        """
         ret = 0
-        if sampleConfig is None:
-            sampleConfig = SampleConfiguration()
 
-        if isinstance(sampleConfig, list):
-            sampleConfig = sampleConfig[0]
+        if isinstance(sampleInfo, list):
+            sampleInfo = sampleInfo[0]
 
-        sampleConfig = [sampleConfig]
+        sampleInfo = [sampleInfo]
         for s in self.steps:
             if isinstance(s, Pipeline):
-                ret += s.stepsNum(sampleConfig)
+                ret += s.stepsNum(sampleInfo)
             else:
                 if isinstance(s, (Decimator)):
                     if s.computeOutputRatioFunc is None:
                         LOGGER.warning(f"computeOutputRatioFunc undefined for step {s}")
                     else:
-                        sampleConfig = sampleConfig * s.computeOutputRatioFunc(
-                            s, sampleConfig[0]
+                        sampleInfo = sampleInfo * s.computeOutputRatioFunc(
+                            s, sampleInfo[0]
                         )
                 elif isinstance(s, Aggregator):
                     if s.computeOutputRatioFunc is None:
                         LOGGER.warning(f"computeOutputRatioFunc undefined for step {s}")
                     else:
 
-                        sampleConfig = sampleConfig[
+                        sampleInfo = sampleInfo[
                             : int(
-                                1 / s.computeOutputRatioFunc(s, sampleConfig[0])
-                            ) : len(sampleConfig)
+                                1 / s.computeOutputRatioFunc(s, sampleInfo[0])
+                            ) : len(sampleInfo)
                         ]
                 ret += 1
         return ret
@@ -262,7 +258,7 @@ class Pipeline(Block, HierarchyNode[Self, Node, Leaf, Step]):
             x.endswith(y) for x in self.collapsedNamedSteps for y in _forceRunSteps
         ):
             return False
-        return self.checkInput(inp)
+        return self.cacheExists(inp)(inp)
 
     def runSteps(
         self, names: Union[str, List[str]], inp
@@ -356,6 +352,8 @@ class Pipeline(Block, HierarchyNode[Self, Node, Leaf, Step]):
             LOGGER.debug(
                 f"Step  {str(self.__class__.__qualname__).split('.')[-1]} {self.compositeName} is cached, skipping.."
             )
+            if self.instID is not None:
+                LOGGER.debug(f"Step has instance ID: {self.instID}")
             LOGGER.debug(f"Step has instance ID: {self.instID}")
             self.onSuccessfulCachingLoad(inp)
             return self.loadCachedOutput()
@@ -412,7 +410,7 @@ class Pipeline(Block, HierarchyNode[Self, Node, Leaf, Step]):
 
                     gc.collect()
                     try:
-                        import torch # type: ignore
+                        import torch  # type: ignore
                         if torch.cuda.is_available():
                             torch.cuda.empty_cache()
                     except BaseException:
@@ -738,6 +736,6 @@ class Pipeline(Block, HierarchyNode[Self, Node, Leaf, Step]):
 HashFactory.registerHasher(
     Pipeline,
     lambda d: HashFactory.compute(
-        [d.name + d.runConfigId] + [HashFactory.compute(p) for p in d.steps]
+        [d.name + d.configID] + [HashFactory.compute(p) for p in d.steps]
     ),
 )

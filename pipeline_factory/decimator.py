@@ -1,30 +1,31 @@
-from typing import Callable
+import inspect
+from typing import Callable, Optional, TypeVar, Any
 
 from block import Block
-from utils.config import Configuration as SampleConfiguration
-from typing import Optional
+from utils.config import Configuration
 from utils.hash import HashFactory
-import inspect
 
+SampleConfiguration = TypeVar("SampleConfiguration", bound = Configuration)
 
-class Aggregator(Block):
-    """A block that is responsible to unite incoming data"""
+class Decimator(Block):
+    """A block that is responsible to split incoming data"""
 
     def __init__(
         self,
         *args,
         computeOutputRatioFunc: Optional[
-            Callable[[Block, SampleConfiguration], float]
+            Callable[[Block, Any], int]
         ] = None,
         **kwargs
     ):
         self.hideInShortenedGraph = True
         self.computeOutputRatioFunc = computeOutputRatioFunc
+
         super().__init__(*args, **kwargs)
 
 
 HashFactory.registerHasher(
-    Aggregator,
+    Decimator,
     lambda d: HashFactory.compute(
         d.name
         + inspect.getsource(d.fn)

@@ -47,7 +47,7 @@ class FileStructure(metaclass=CombinedMeta):
         l = [
             fixPath(PIPELINE_CONFIG[attr]),
             self.instID if self.instID is not None else "nonInstanceSpecific",
-            str(self.runConfigId),
+            str(self.configID),
             self.endpoint,
         ]
         if ignoreInstance:
@@ -74,7 +74,7 @@ class FileStructure(metaclass=CombinedMeta):
         self._instID = val
 
     @property
-    def runConfigId(self) -> str:
+    def configID(self) -> str:
         """The instance identifier
 
         Raises:
@@ -85,7 +85,7 @@ class FileStructure(metaclass=CombinedMeta):
         """
         if self.runConfig is None:
             raise ValueError("runConfig has not been set")
-        return self.runConfig.runConfigId
+        return self.runConfig.configID
 
     @property
     def endpoint(self) -> str:

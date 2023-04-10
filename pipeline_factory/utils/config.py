@@ -41,6 +41,13 @@ class Configuration(Generic[T]):
         Fields not to be used in __str__ or __repr__
         """
         return []
+    
+    @abstractproperty
+    def configID(self) -> str:
+        """
+        A unique identifier for the configuration
+        """
+        return ""
 
     @property
     def existingFields(self) -> List[str]:

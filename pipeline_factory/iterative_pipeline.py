@@ -27,7 +27,7 @@ class ChildPipeline(Pipeline):
 HashFactory.registerHasher(
     ChildPipeline,
     lambda d: HashFactory.compute(
-        [d.name + d.runConfigId] + [HashFactory.compute(p) for p in d.steps]
+        [d.name + d.configID] + [HashFactory.compute(p) for p in d.steps]
     ),
 )
 
@@ -50,7 +50,7 @@ class IterativePipeline(InstancesCacher, Pipeline):
         self: Self,
         name: str,
         steps: List[Step],
-        runConfig: RunConfiguration,
+        runConfig: RunConfiguration=None,
         version: str = "",
         description: str = "",
         parent: Optional[Node] = None,
@@ -111,31 +111,36 @@ class IterativePipeline(InstancesCacher, Pipeline):
             **{k: v for k, v in obj.params.items()},
         )
 
-    def stepsNum(self, sampleConfigs):
-        """The total number of steps, computed recursively"""
+    def stepsNum(self, samplesInfo: Optional[Union[Any, List[Any]]]=None):
+        """The total number of steps, computed recursively.
+        Samples information is required by the `computeOutputRatioFunc` of the
+        `Decimator` and `Aggregator` steps of the pipeline
+        """
         ret = 0
-        for sampleConfig in sampleConfigs:
-            sampleConfig = [sampleConfig]
+        if not isinstance(samplesInfo, list):
+            samplesInfo = [samplesInfo]
+        for sampleInfo in samplesInfo:
+            sampleInfo = [sampleInfo]
             for s in self.steps:
                 if isinstance(s, Pipeline):
-                    ret += s.stepsNum(sampleConfig)
+                    ret += s.stepsNum(sampleInfo)
                 else:
                     ret += 1
                     if (
                         isinstance(s, Decimator)
                         and s.computeOutputRatioFunc is not None
                     ):
-                        sampleConfig = sampleConfig * s.computeOutputRatioFunc(
-                            s, sampleConfig[0]
+                        sampleInfo = sampleInfo * s.computeOutputRatioFunc(
+                            s, sampleInfo[0]
                         )
                     if (
                         isinstance(s, Aggregator)
                         and s.computeOutputRatioFunc is not None
                     ):
-                        sampleConfig = sampleConfig[
+                        sampleInfo = sampleInfo[
                             : int(
-                                1 / s.computeOutputRatioFunc(s, sampleConfig[0])
-                            ) : len(sampleConfig)
+                                1 / s.computeOutputRatioFunc(s, sampleInfo[0])
+                            ) : len(sampleInfo)
                         ]
 
         return ret
@@ -433,6 +438,6 @@ class IterativePipeline(InstancesCacher, Pipeline):
 HashFactory.registerHasher(
     IterativePipeline,
     lambda d: HashFactory.compute(
-        [d.name + d.runConfigId] + [HashFactory.compute(p) for p in d.steps]
+        [d.name + d.configID] + [HashFactory.compute(p) for p in d.steps]
     ),
 )

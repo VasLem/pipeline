@@ -188,7 +188,7 @@ class Reporter(Writer):
 
         The following keyword arguments can be provided to *override* the saving id:
             stepName (str): the step name
-            runConfigID (str): the current RunningConfiguration ID
+            configID (str): the current RunningConfiguration ID
             instID (str): the instance ID
         Args:
             desc (str): The description of the file, human readable and concise
@@ -208,7 +208,7 @@ class Reporter(Writer):
 
     @property
     def idFields(self) -> tuple:
-        return ("stepName", "runConfigID", "instID")
+        return ("stepName", "configID", "instID")
 
     @property
     def id(self) -> dict:
@@ -217,7 +217,7 @@ class Reporter(Writer):
             k: v
             for k, v in {
                 "stepName": self.parent.compositeName,
-                "runConfigID": self.parent.runConfigId
+                "configID": self.parent.configID
                 if self.parent.runConfig is not None
                 else "",
                 "instID": self.parent.instID,
@@ -232,7 +232,7 @@ class Reporter(Writer):
             k: v
             for k, v in {
                 "stepName": self.parent.compositeName,
-                "runConfigID": self.parent.runConfigId
+                "configID": self.parent.configID
                 if self.parent.runConfig is not None
                 else "",
             }.items()

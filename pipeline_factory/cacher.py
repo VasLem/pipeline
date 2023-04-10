@@ -272,7 +272,10 @@ class Cacher(FileStructure, Generic[Unpack[InputArgs], OutputArgs]):
         """
         The saveOutputToCache function saves the output of a function to a cache.
         """
-        LOGGER.debug(f"Saving {self.name}:{self.instID} output to cache...")
+        if self.instID is not None:
+            LOGGER.debug(f"Saving {self.name}:{self.instID} output to cache...")
+        else:
+            LOGGER.debug(f"Saving {self.name} output to cache...")
         with shelve.open(self.cachedOutputPath, writeback=True) as h:
             h[str(self.instID)] = output
         with shelve.open(self.cachedOutputHashPath, writeback=True) as h:

@@ -16,7 +16,7 @@ class SwitchPipeline(IterativePipeline):
         self,
         name: str,
         stepsLists: List[List[Union[Pipeline, Block]]],
-        runConfig: RunConfiguration,
+        runConfig: RunConfiguration=None,
         switchSteps: Union[Iterable[int], int] = [],
         switchStepsEvery: int = 0,
         version: str = "",
@@ -92,13 +92,15 @@ class SwitchPipeline(IterativePipeline):
         for self.currentInstCnt in range(len(self.stepsLists)):
             super().updateParams(params)
 
-    def stepsNum(self, sampleConfigs):
+    def stepsNum(self, samples: Optional[Union[str, List[str]]]=None):
+        if not isinstance(samples, list):
+            samples = [samples]
         if self.switchSteps:
             switchSteps = self.switchSteps
         else:
-            switchSteps = range(0, len(sampleConfigs), self.switchStepsEvery)
+            switchSteps = range(0, len(samples), self.switchStepsEvery)
         # @TODO: support Decimator and Aggregator
-        fullSteps = [len(sampleConfigs) - step > 0 for step in switchSteps]
+        fullSteps = [len(samples) - step > 0 for step in switchSteps]
 
         if all(fullSteps):
             ind = -1
@@ -106,7 +108,7 @@ class SwitchPipeline(IterativePipeline):
             ind = fullSteps.index(False)
         return sum(
             sum(
-                step.stepsNum(sampleConfigs[p : n + 1])
+                step.stepsNum(samples[p : n + 1])
                 if isinstance(step, Pipeline)
                 else 1
                 for step in steps
@@ -116,11 +118,11 @@ class SwitchPipeline(IterativePipeline):
             )
         ) + sum(
             step.stepsNum(
-                sampleConfigs[
+                samples[
                     switchSteps[ind] : (
                         switchSteps[ind + 1]
                         if (ind != -1) and (ind < len(switchSteps) - 1)
-                        else len(sampleConfigs)
+                        else len(samples)
                     )
                 ]
             )
@@ -213,6 +215,6 @@ class SwitchPipeline(IterativePipeline):
 HashFactory.registerHasher(
     SwitchPipeline,
     lambda d: HashFactory.compute(
-        [d.name + d.runConfigId] + [HashFactory.compute(p) for p in d.stepsLists]
+        [d.name + d.configID] + [HashFactory.compute(p) for p in d.stepsLists]
     ),
 )

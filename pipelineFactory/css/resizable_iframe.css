@@ -1,0 +1,17 @@
+.ui-resizable-helper {
+    border: 1px dotted gray;
+}
+
+.resizable {
+    display: block;
+    padding: 30px;
+    border: 2px solid gray;
+    overflow: hidden;
+    position: relative;
+}
+
+iframe {
+    resize: both;
+    overflow: auto;
+    width: 80%
+}

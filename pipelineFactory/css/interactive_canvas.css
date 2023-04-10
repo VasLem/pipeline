@@ -1,0 +1,52 @@
+.canvas {
+    display: block;
+    margin: 1em auto;
+    background: #fff;
+    border: 1px solid #ccc
+}
+
+.canvas-container {
+    width: 100%;
+    text-align: center;
+    position: relative;
+}
+
+.arrow {
+    position: absolute;
+    top: 50%;
+    margin-top: -1em;
+    color: rgb(82, 74, 74);
+    cursor: pointer;
+}
+
+.arrow.prev {
+    left: 75px;
+    margin-left: -1em;
+    font-size: 15px;
+}
+
+.arrow.next {
+    right: 75px;
+    margin-right: -1em;
+    font-size: 15px;
+}
+
+.arrow.prev:after {
+    content: "\\2190";
+}
+
+.arrow.next:after {
+    content: "\\2192";
+}
+
+.description {
+    font-size: 15px;
+}
+
+.description.multifig {
+    font-size: 16px;
+}
+
+.description.step {
+    font-size: 15px;
+}

@@ -335,6 +335,7 @@ class Cacher(FileStructure, Generic[Unpack[InputArgs], OutputArgs]):
                 )
                 + f"\n{self._inputHash}\nCached: {loadedInputHash}"
             )
+        return ret
 
     def reset(self):
         super().reset()

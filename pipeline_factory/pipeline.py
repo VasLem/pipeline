@@ -251,7 +251,8 @@ class Pipeline(Block, HierarchyNode[Self, Node, Leaf, Step]):
         Returns:
             True whether the existing cache is valid for the given inputs.
         """
-
+        if not self.cache:
+            return False
         if untilStep and any(x.endswith(untilStep) for x in self.collapsedNamedSteps):
             return False
         if _forceRunSteps and any(
